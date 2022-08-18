@@ -45,7 +45,42 @@ Actor是UE4 网络传输的基本单位，RPC,Property，或者Actor Component�
 
 
 
+2 Propery Replication
 
+属性复制：当把Actor的Replicates属性设置为true后，并不是所有属性都会同步复制，而是要通过指定哪些属性需要复制，服务器才会进行同步，属性复制有两种方式：
 
+（1）当属性发生变化时，服务器直接同步给客户端，
+
+c++:
+
+UPROPERTY(EditAnywhere,BlueprintReadWrite,Replicated,Category = Health)
+float health = 0.0;
+
+蓝图：在属性面板，将Replication属性，设置为Replicated即可
+
+(2)第二种，服务器同步属性给客户端时，还会触发On_Rep()函数，c++ 和蓝图，处理方式不一样：
+
+c++：
+当属性在服务器上发生变化的时候，客户端会自动触发On_Rep()函数，无需手动调用，而如果是在服务端，则需要手动调用On_Rep()函数，在函数声明中，需要加入Replicated_Using关键字，此时的
+On_Rep()函数，就只会在服务端去调用，此种情况，用于客户端发消息给服务端，同步服务端的数据，即把客户端的数据同步给服务端，声明方式如下：
+
+客户端：
+UFUNCTION()
+void OnRep_Score();即可
+
+服务端：
+UPROPERTY(Replicated_Using = OnRep_Score)
+float Score;
+
+UFUNCTION()
+void OnRep_Score();
+
+蓝图：
+
+把属性的Replication属性设置为RepNotify,同时，需要声明一个函数：OnRep_Score函数
+
+注意：
+在c++中设置属性同步时，不管是在客户端，还是服务端操作，都需要设置属性的Lifetime，设置Lifetime，就是重载Actor::GetLiftTimeReplicatedPros函数，这个函数会在类的第一个实例调用，
+是第一个实例初始化调用，而不是每个实例初始化调用，也就是说这个LifeTime的设置是基于类本身，而不是实例本身！！
 
 
