@@ -1,0 +1,26 @@
+一 UE4网络同步机制
+
+1，UE4中有哪些同步机制？？
+(1) Actor Replication (最基本的复制单位)
+(2) Property Replication (属性同步)
+(3) Function Call Replication (函数调用复制--RPC)
+(4) Actor Component Replication (Actor 组件复制)
+(5) Generatic SubObject Replication (UObject 复制)
+
+
+2,UE4有哪些服务器模式？
+(1) Listen Server:监听服务器，即局域网内进行本地游戏，此时本地机器即是客户端，也是服务器
+
+(2) 独立服务器，即Dedicated Server，简称DS,也叫做专用服务器，此时它的功能纯粹作为服务器，不进行渲染功能，只执行服务器逻辑，默认情况下连界面都没有，除非在在启动参数加入-log
+
+注意：
+
+游戏中的数据都是由服务器来同步给客户端，不同客户端之间是没有直接交互的，必须通过服务器告知，客户端的数据都是通过服务器来校准，网络好的客户端，数据更接近服务器，网络差的客户端，数据差异
+
+更大，客户端发信息给服务器，只有一种方式，那就是通过RPC-Server一种方式，除此无它！
+
+二 各种同步机制详解：
+
+1 Actor Replication：
+
+
