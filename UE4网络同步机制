@@ -23,4 +23,29 @@
 
 1 Actor Replication：
 
+Actor是UE4 网络传输的基本单位，RPC,Property，或者Actor Component复制，都是得在Actor中执行，不得脱离Actor，所以说Actor是网络复制的基本单位，当Actor发生变化时，引擎会在预设时间内
+对该Actor进行同步，从而使得拥有该Actor的所有客户端，得到同步，但是一般来说，UE4并不知道，哪些Actor，需要复制，因为默认是关闭复制的（复制需要消耗带宽），所以需要手动打开复制属性，
+
+两种方式打开Actor的复制属性：
+（1）c++方式：
+属性：bReplicates 赋值为1 即可
+
+(2)蓝图方式：
+属性面板，勾上Replicates属性，即可
+
+问题，如何让Actor，只同步给部分玩家，比如只同步给拥有者，只同步给一定距离范围内的玩家，只同步给付费玩家？
+
+涉及到一个概念：network relavant概念，即网络相关性，作用？：通过指定网络相关性，比如bOnlyRelavantToOwner变量设置为true，那么Actor就只同步给拥有该Actor的玩家,而其他的玩家不会
+
+得到同步！也就是说，只有当Actor设置为Relavant 服务器，跟服务器相关，才会得到服务器的同步！
+
+如果想要属性只同步给一定距离范围内的玩家？可以通过设置属性Actor::NetCullDistanceSquared，设置裁剪距离，也就是在此距离范围内的玩家，都会得到同步更新，超过范围的玩家，不生效
+
+如果想要只同步给特定条件的玩家，比如付费玩家呢？没有具体的变量可以设置，但是可以通过重载一个函数，override IsNetRelavantFor 函数，设置条件，从而达到目的
+
+
+
+
+
+
 
