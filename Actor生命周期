@@ -26,4 +26,41 @@ LoadMap 或者AddToWorld -->LoadPackagesFully(从包里加载所有的Actor) ---
 FinishDestroy(结束销毁)
 
 
+二：动态SpawnActor流程
+
+创建流程：
+
+Play in Editor 路径与 Load from Disk 十分相似，然而 Actor 却并非从磁盘中加载，而是从编辑器中复制而来。
+
+SpawnActor 被调用。
+
+PostSpawnInitialize
+
+PostActorCreated - 创建后即被生成的 Actor 调用，构建函数类行为在此发生。PostActorCreated 与 PostLoad 互斥。
+
+ExecuteConstruction：
+
+OnConstruction - Actor 的构建。蓝图 Actor 的组件在此处创建，蓝图变量在此处初始化 
+
+PostActorConstruction：
+
+PreInitializeComponents - 在 Actor 的组件上调用 InitializeComponent 之前进行调用。
+
+InitializeComponent - Actor 上定义的每个组件的创建辅助函数。
+
+PostInitializeComponents - Actor 的组件初始化后调用。 
+
+OnActorSpawned 在 UWorld 上播放。
+
+BeginPlay 被调用。 
+
+
+销毁流程：
+1 显示调用Destroy,或者编辑器停止Play，或者游戏结束 -->调用EndPlay-->将Actor 标记为 PendingKill--->RemoveActor From ULevel -->下一次gabage的时候把它释放掉-->BeginDestroy->
+FinishDestroy(结束销毁)
+
+
+
+
+
 
