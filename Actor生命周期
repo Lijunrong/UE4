@@ -4,5 +4,26 @@
 一： 直接从关卡或者包里面加载的，即直接摆在关卡里面的Actor;
 二： 代码里面动态SpawnActor。
 
-一：摆放在关卡的Actor:
+一：摆放在关卡的Actor: LoadMap或者AddToWolrd，加载关卡时创建Actor
+
+UnrealEngine.cpp:
+
+LoadMap:加载地图函数，函数内主要操作：
+1 CleanupPackagesToFullyLoad 先清理残留包数据
+2 // Unload the current world 卸载掉当前world的相关数据
+3  UWorld::FindWorldInPackage 从Package里面加载最新的world
+4  LoadPackagesFully：从Package里面加载actor
+5 调用 World InitialActorsForPlay：初始化所有的Actor运行相关的东西，主要是初始化Actos的networld (InitializeNetworkActors Level里面的函数)
+6 调用 Level->RouteActorInitialize(): 路由Actor初始化
+
+创建流程：
+LoadMap 或者AddToWorld -->LoadPackagesFully(从包里加载所有的Actor) --->World->InitialActorsForPlay --->Actor::InitialNetWorldActors-->World->RouteActorInitialize()
+-> Level->RouteActorInitialize() ---> Actor-->PreInitialComponents(预初始化组件)-->Actor-->PostInitializeComponents -->UpdateAllReplicatedComponents(刷新Actor所有
+可复制组件，即把可复制组件添加到数组ReplicatedComponents) -->Actor::DispatchBeginPlay(只有在World->BeginPlay执行后，才会调用)-->Actor::BeginPlay()
+
+销毁流程：
+1 显示调用Destroy,或者编辑器停止Play，或者游戏结束 -->调用EndPlay-->将Actor 标记为 PendingKill--->RemoveActor From ULevel -->下一次gabage的时候把它释放掉-->BeginDestroy->
+FinishDestroy(结束销毁)
+
+
 
