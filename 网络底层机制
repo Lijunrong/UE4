@@ -1,2 +1,58 @@
+1 最底层：
 
-https://blog.ch-wind.com/ue4-network-overview/
+FSocket 和 SocketSubSystem
+
+FSocket:封装了网络底层操作，包括上层需要的网络状态的查询，发包，收包等操作，一般情况下使用的FSocketBSD,是对Socket API的直接封装
+
+SocketSubSystem:FSocket的工厂类，上层调用不需要关心FSocket的内部实现，只需要通过配置好的SocketSubSystem 去创建FSocket的基类指针
+
+不同平台有对应的工厂类，比如安卓：FSocketSubSytemAndroid
+
+支持协议：IPV4以及IPV6
+
+上层有两个关键的类：UNetDriver,另外一个是UConnection。
+
+UNetDriver：网络处理的核心类，封装了一些接口：诸如TickDispatch（处理socket包数据），TickFlush（处理值复制）等网络处理函数
+
+UConnection:是客户端和服务器的连接，每一个客户端跟服务器都会建立唯一个Connection，即ServerConnection，而服务器维护者所有客户端的connection，也就是有个ClientConnections。
+
+UConnection 类里面定义了一些时间戳，用来记录连接的状态，比如上一次连接时间LastTime之类的
+
+两者之间的关系？
+
+UNetDriver:TickDispatch 会从Socket包里面取出数据，然后发送给对应的Connection，一般就是根据客户端的ip地址去发送，如果发现没有Connection并符合断开的条件，那么就会重新创建连接
+
+然后UConnection是在UIpNetDriver 类里面创建的，UIpNetDriver 继承于UNetDriver类
+
+TickFlush函数：执行值复制的逻辑，会调用到ServerReplicatedActors，进行值复制
+
+TicDispatch 是在所有的Tick之前执行，而TickFlush是在Tick之后执行
+
+
+然后客户端和服务器连接的一个过程：
+
+客户端是通过一个类叫做，UPendingNetGame负责建立连接，有一个函数，InitNetDriver函数，创建UNetDriver对象，同时调用UIpNetDriver InitConnection函数，创建ServerConnection 这些连接
+
+同时做一些初始化工作。
+
+建立连接的过程：
+
+1 握手操作，PacketHandler，用于处理数据包的逻辑，比如握手操作，这个类是在UNetConnection的InitBase类创建，而UNetConnection的InitBase 在它的基类UIpConnection的InitBase类
+调用（虚函数），UIpConnection的InitBase 类是在UIpConnection的InitLocalConnection函数里面调用，而这个InitLocalConnection函数是在UNetDriver的InitConnect函数调用
+而这个InitConnect函数又是UPandingNetGame的InitNetDriver函数里面，创建了UNetDriver对象后调用的，同时在UPandingNetGame的InitNetDriver里面调用了ServerConnection对象的
+Handle变量（PakketHandler对象）的函数BeginHandleShaking函数，开始进行握手操作，
+
+2 在握手成功后，调用SendInitialJoin函数，发送NMT_Hello 包，服务端接收到NMT_Hello包后，服务端发送Challenge包给客户端
+
+3 客户度收到Challenge包后发送NMT_Login请求，服务端收到请求，发送NMT_Welcome，加载地图，客户端收到后发送NMT_Join请求，之后的操作就是RPC的操作
+
+
+收包发包流程：
+
+首先每个Actor 都有对应的一个ActorChannel，ActorChannel管理者一个复制的Actor的创建以及生命周期，还有属性复制，以及RPC操作，而这些操作真实发生在对象复制器:ObjectRepliator里面
+
+
+
+
+
+
