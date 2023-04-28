@@ -49,6 +49,8 @@ Handle变量（PakketHandler对象）的函数BeginHandleShaking函数，开始�
 
 收包发包流程：
 
+1 收包大概流程：
+
 首先每个Actor 都有对应的一个ActorChannel，ActorChannel管理者一个复制的Actor的创建以及生命周期，还有属性复制，以及RPC操作，而这些操作真实发生在对象复制器:ObjectRepliator里面
 
 从下往上：数据经过Socket之后，解析出来后，经过PacketHandler，然后是UNetDriver，然后找到对应UConnection,然后是通过ReiveRawPacket函数去发给对应的Connection，然后
@@ -57,9 +59,31 @@ UConnection::ReceiveRawPacket 对数据进行处理，做什么操作？？调�
 
 InComing:对原始数据进行解析缓存处理,用到了FBitReader类解析数据
 
-InComingHigh:经过InComing函数处理后，就得到了有序的数据，InComingHigh就是对有序的数据进行处理
+InComingHigh:经过InComing函数处理后，就得到了有序的数据，InComingHigh就是对有序的数据进行处理！
+
+InComing 和 InComingHigh 执行过后，调用 UConnection::ReceivedPacket 函数。
+
+UConnection::ReceivePacket：对Ack包和数据包进行处理，Ack包进行ack的处理，数据包先经过Ack逻辑处理，然后塞进FInBunch，然后根据ChanelName以及ChanelIndex创建相对应的Chanel
+
+然后调用Chanel的 ReceiveRawBunch函数。
+
+UConnection::ReceiveRawBunch:对Bunch数据进行处理，如果是序列号不确定的，先缓存到 class FInBunch*        InRec; 对于序列号稳定的，则进入到ReceiveNextBunch函数
+
+UConnection::ReceiveNextBunch:对Bunch进行和平处理，然后调用ReceiveSequenceBunch
+
+UConnection::ReceiveSequenceBunch:进一步调用Chanel的ReceiveBunch
+
+UChanel::ReceiveBunch:进一步调用ProcessBunch
+
+UChanel::ProcessBunch:调用FObjectReplicator::ReceiveBunch 函数，对数据进行解析
+
+2 发包
+会调用UChanel::SendBunch 进行发包，并立即调用FlushNet函数（）
 
 
+值复制逻辑：
+
+值复制的操作主要是在FObjectReplicator::ReplicateProperties函数,进行数据的对比等操作。
 
 
 
